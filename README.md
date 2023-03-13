@@ -7,6 +7,7 @@ git clone https://github.com/WeGo-Robotics/erp42_sim_ws.git
 cd erp42_sim_ws
 
 3.epr42_sim_ws 폴더에서 catkin_make를 실행합니다.
+
 catkin_make
 
 4.사용하시는 shell에 맞게 아래 두 명령어 중 선택하여 입력하여,
