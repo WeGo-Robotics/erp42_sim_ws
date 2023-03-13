@@ -6,6 +6,8 @@ import cv2
 import numpy as np
 
 
+# Define a class called Draw
+
 class Draw:
     def __init__(self):
         # Initialize ROS node
@@ -14,12 +16,15 @@ class Draw:
         self.image_pub_color = rospy.Publisher("draw_img", Image, queue_size=10)
         self.rate = rospy.Rate(10)
 
+    # Define the main method
     def main(self):
         # Initialize bridge to convert between ROS and OpenCV images
         self.bridge = CvBridge()
 
+        # Set the height and width of the image
         self.height = 480
         self.width = 640
+        # Define some colors
         self.white = [255, 255, 255]
         self.blue = [255, 0, 0]
         self.green = [0, 255, 0]
@@ -27,17 +32,20 @@ class Draw:
         self.cyan = [255, 255, 0]
         self.magenta = [255, 0, 255]
         self.yellow = [0, 255, 255]
+        # Create an image with zeros
         self.color = np.zeros((self.height, self.width, 3), np.uint8)
 
         self.pts1 = np.array([[300, 150], [400, 150], [350, 250]])
         self.pts2 = np.array([[425, 200], [500, 150], [500, 250]])
 
+        # Add some colored pixels to the image
         self.color[175, 125] = self.white
         self.color[0:50, 50:100] = self.blue
         self.color[50:100, 100:150] = self.green
         self.color[100:150, 150:200] = self.red
         self.color[200:400, 100:110] = self.cyan
 
+        # Add some lines, circles, rectangles, and polygons to the image
         cv2.line(self.color, (100, 200), (300, 400), self.magenta, 5)
         cv2.line(self.color, (150, 300), (150, 300), self.yellow, 10)
         cv2.circle(self.color, (300, 400), 50, self.blue, 5)
@@ -54,8 +62,11 @@ class Draw:
             3,
         )
 
+        # Convert the OpenCV image to a ROS image message
         img_msg = self.bridge.cv2_to_imgmsg(self.color, "bgr8")
+        # Publish the image message
         self.image_pub_color.publish(img_msg)
+        # Sleep to maintain the publishing rate
         self.rate.sleep()
 
 
