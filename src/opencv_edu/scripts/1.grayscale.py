@@ -8,7 +8,9 @@ from cv_bridge import CvBridge
 import numpy as np
 
 
+# Create a class called Gray_Scale
 class Gray_Scale:
+    # Define the constructor method
     def __init__(self):
         # Initialize ROS node
         rospy.init_node("image_node", anonymous=False)
@@ -36,6 +38,7 @@ class Gray_Scale:
 
         # Publish the ROS image message
         self.image_pub.publish(self.ros_image)
+        # Sleep for a certain duration to maintain the publishing rate
         self.rate.sleep()
 
 
