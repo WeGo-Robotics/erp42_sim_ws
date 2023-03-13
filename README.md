@@ -58,5 +58,5 @@ rqt_graph
 
 10. rqt_image_view를 실행하여, 결과를 확인합니다.
 
-![image](https://user-images.githubusercontent.com/113410253/224614420-ac55471f-14bb-4088-bcc2-1516f25b6b27.png)
+![image](https://user-images.githubusercontent.com/113410253/224614482-9f10f471-dbf3-494b-a83f-1e4ced44baf4.png)
 
