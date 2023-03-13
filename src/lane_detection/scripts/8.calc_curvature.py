@@ -8,10 +8,10 @@ import os
 import matplotlib.pyplot as plt
 
 
-class Meter_Per_Pixel:
+class Calc_Curvature:
     def __init__(self):
         self.bridge = CvBridge()
-        rospy.init_node("meter_per_pixel_node")
+        rospy.init_node("calc_curvature_node")
         self.pub = rospy.Publisher(
             "/sliding_windows/compressed", CompressedImage, queue_size=10
         )
@@ -258,6 +258,45 @@ class Meter_Per_Pixel:
         meter_per_pix_y = meter_y / self.img_y
         return meter_per_pix_x, meter_per_pix_y
 
+    def calc_curve(self, left_x, left_y, right_x, right_y):
+        # WeGo simulation상의 차선의 간격(enu 좌표)을 통해 simulation상의 곡률을 구하는 함수입니다.
+        # # Args:
+        # left_x (np.array): 왼쪽 차선 pixel x값
+        # left_y (np.array): 왼쪽 차선 pixel y값
+        # right_x (np.array): 오른쪽 차선 pixel x값
+        # right_y (np.array): 오른쪽 차선 pixel y값
+        #
+        # Returns:
+        # float: 왼쪽, 오른쪽 차선의 곡률입니다.
+
+        # 640p video/image, so last (lowest on screen) y index is 639
+        y_eval = self.img_x - 1
+
+        # Define conversions in x and y from pixels to meter
+        # meter per pixel in each x, y dimension
+        meter_per_pix_x, meter_per_pix_y = self.meter_per_pixel()
+
+        # Fit new polynomials to x,y in world space(meterinate)
+        left_fit_cr = np.polyfit(left_y * meter_per_pix_y, left_x * meter_per_pix_x, 2)
+        right_fit_cr = np.polyfit(
+            right_y * meter_per_pix_y, right_x * meter_per_pix_x, 2
+        )
+        # Calculate the new radius of curvature
+        left_curve_radius = (
+            (1 + (2 * left_fit_cr[0] * y_eval * meter_per_pix_y + left_fit_cr[1]) ** 2)
+            ** 1.5
+        ) / np.absolute(2 * left_fit_cr[0])
+        right_curve_radius = (
+            (
+                1
+                + (2 * right_fit_cr[0] * y_eval * meter_per_pix_y + right_fit_cr[1])
+                ** 2
+            )
+            ** 1.5
+        ) / np.absolute(2 * right_fit_cr[0])
+
+        return left_curve_radius, right_curve_radius
+
     def img_CB(self, data):
         img = self.bridge.compressed_imgmsg_to_cv2(data)
         self.nwindows = 10
@@ -285,6 +324,10 @@ class Meter_Per_Pixel:
 
         meter_per_pix_x, meter_per_pix_y = self.meter_per_pixel()
 
+        left_curve_radius, right_curve_radius = self.calc_curve(
+            left_x, left_y, right_x, right_y
+        )
+
         os.system("clear")
         print(f"------------------------------")
         print(f"left : {left}")
@@ -296,6 +339,8 @@ class Meter_Per_Pixel:
         print(f"right_y : {right_y}")
         print(f"meter_per_pix_x : {meter_per_pix_x}")
         print(f"meter_per_pix_y : {meter_per_pix_y}")
+        print(f"left_curve_radius : {left_curve_radius}")
+        print(f"right_curve_radius : {right_curve_radius}")
         print(f"------------------------------")
         sliding_window_msg = self.bridge.cv2_to_compressed_imgmsg(sliding_window_img)
         self.pub.publish(sliding_window_msg)
@@ -307,5 +352,5 @@ class Meter_Per_Pixel:
 
 
 if __name__ == "__main__":
-    meter_per_pixel = Meter_Per_Pixel()
+    calc_curvature = Calc_Curvature()
     rospy.spin()

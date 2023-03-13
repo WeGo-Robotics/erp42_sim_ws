@@ -27,45 +27,45 @@ class White_line_Detect:
         return white_color
 
     def img_warp(self, img, white_color):
-        img_x, img_y = img.shape[1], img.shape[0]
-        # print(f'img_x:{img_x}, img_y:{img_y}')
+        self.img_x, self.img_y = img.shape[1], img.shape[0]
+        # print(f'self.img_x:{self.img_x}, self.img_y:{self.img_y}')
 
         # img_size = [640, 480]
         # ROI
-        src_side_offset = [30, 100]
-        src_center_offset = [100, 40]
+        src_side_offset = [round(self.img_x * 0.046875), round(self.img_y * 0.208)]
+        src_center_offset = [round(self.img_x * 0.14), round(self.img_y * 0.083)]
         src = np.float32(
             [
-                [src_side_offset[0], img_y - src_side_offset[1]],
+                [src_side_offset[0], self.img_y - src_side_offset[1]],
                 [
-                    img_x / 2 - src_center_offset[0],
-                    img_y / 2 + src_center_offset[1],
+                    self.img_x / 2 - src_center_offset[0],
+                    self.img_y / 2 + src_center_offset[1],
                 ],
                 [
-                    img_x / 2 + src_center_offset[0],
-                    img_y / 2 + src_center_offset[1],
+                    self.img_x / 2 + src_center_offset[0],
+                    self.img_y / 2 + src_center_offset[1],
                 ],
                 [
-                    img_x - src_side_offset[0],
-                    img_y - src_side_offset[1],
+                    self.img_x - src_side_offset[0],
+                    self.img_y - src_side_offset[1],
                 ],
             ]
         )
         # 아래 2 개 점 기준으로 dst 영역을 설정합니다.
-        dst_offset = [80, 0]
+        dst_offset = [round(self.img_x * 0.125), 0]
         # offset x 값이 작아질 수록 dst box width 증가합니다.
         dst = np.float32(
             [
-                [dst_offset[0], img_y],
+                [dst_offset[0], self.img_y],
                 [dst_offset[0], 0],
-                [img_x - dst_offset[0], 0],
-                [img_x - dst_offset[0], img_y],
+                [self.img_x - dst_offset[0], 0],
+                [self.img_x - dst_offset[0], self.img_y],
             ]
         )
         # find perspective matrix
         matrix = cv2.getPerspectiveTransform(src, dst)
         matrix_inv = cv2.getPerspectiveTransform(dst, src)
-        white_line = cv2.warpPerspective(white_color, matrix, [img_x, img_y])
+        white_line = cv2.warpPerspective(white_color, matrix, [self.img_x, self.img_y])
         return white_line
 
     def img_CB(self, data):
@@ -76,6 +76,8 @@ class White_line_Detect:
 
         white_line_img_msg = self.bridge.cv2_to_compressed_imgmsg(white_line)
         self.pub.publish(white_line_img_msg)
+        cv2.namedWindow("img", cv2.WINDOW_NORMAL)
+        cv2.namedWindow("white_line", cv2.WINDOW_NORMAL)
         cv2.imshow("img", img)
         cv2.imshow("white_line", white_line)
         cv2.waitKey(1)

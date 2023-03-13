@@ -1,22 +1,28 @@
 #!/usr/bin/env python3
 import rospy
+from morai_msgs.msg import CtrlCmd
 from sensor_msgs.msg import CompressedImage, Image
 from cv_bridge import CvBridge
 import numpy as np
 import cv2
 import os
 import matplotlib.pyplot as plt
+from math import *
+from time import *
 
 
-class Meter_Per_Pixel:
+class LKAS:
     def __init__(self):
         self.bridge = CvBridge()
-        rospy.init_node("meter_per_pixel_node")
+        rospy.init_node("LKAS_node")
         self.pub = rospy.Publisher(
             "/sliding_windows/compressed", CompressedImage, queue_size=10
         )
         rospy.Subscriber("/image_jpeg/compressed", CompressedImage, self.img_CB)
+        self.erp42_ctrl_pub = rospy.Publisher("/ctrl_cmd", CtrlCmd, queue_size=3)
+        self.start_time = rospy.get_time()
         self.nothing_flag = False
+        self.ctrl_cmd_msg = CtrlCmd()
 
     def detect_color(self, img):
         # Convert to HSV color space
@@ -216,7 +222,6 @@ class Meter_Per_Pixel:
             left_y = self.nothing_pixel_y
             right_x = self.nothing_pixel_right_x
             right_y = self.nothing_pixel_y
-
         else:
             if len(left_x) == 0:
                 left_x = right_x - self.img_x / 2
@@ -258,7 +263,103 @@ class Meter_Per_Pixel:
         meter_per_pix_y = meter_y / self.img_y
         return meter_per_pix_x, meter_per_pix_y
 
+    def calc_curve(self, left_x, left_y, right_x, right_y):
+        # WeGo simulation상의 차선의 간격(enu 좌표)을 통해 simulation상의 곡률을 구하는 함수입니다.
+        # # Args:
+        # left_x (np.array): 왼쪽 차선 pixel x값
+        # left_y (np.array): 왼쪽 차선 pixel y값
+        # right_x (np.array): 오른쪽 차선 pixel x값
+        # right_y (np.array): 오른쪽 차선 pixel y값
+        #
+        # Returns:
+        # float: 왼쪽, 오른쪽 차선의 곡률입니다.
+
+        # 640p video/image, so last (lowest on screen) y index is 639
+        y_eval = self.img_x - 1
+
+        # Define conversions in x and y from pixels to meter
+        # meter per pixel in each x, y dimension
+        meter_per_pix_x, meter_per_pix_y = self.meter_per_pixel()
+
+        # Fit new polynomials to x,y in world space(meterinate)
+        left_fit_cr = np.polyfit(left_y * meter_per_pix_y, left_x * meter_per_pix_x, 2)
+        right_fit_cr = np.polyfit(
+            right_y * meter_per_pix_y, right_x * meter_per_pix_x, 2
+        )
+        # Calculate the new radius of curvature
+        left_curve_radius = (
+            (1 + (2 * left_fit_cr[0] * y_eval * meter_per_pix_y + left_fit_cr[1]) ** 2)
+            ** 1.5
+        ) / np.absolute(2 * left_fit_cr[0])
+
+        right_curve_radius = (
+            (
+                1
+                + (2 * right_fit_cr[0] * y_eval * meter_per_pix_y + right_fit_cr[1])
+                ** 2
+            )
+            ** 1.5
+        ) / np.absolute(2 * right_fit_cr[0])
+
+        return left_curve_radius, right_curve_radius
+
+    def calc_vehicle_offset(self, sliding_window_img, left_x, left_y, right_x, right_y):
+        # WeGo simulation상의 차선의 간격 meter을 통해 차량의 이탈정도를 구합니다.
+        # Args:
+        # sliding_window_img (_type_): _description_
+        # left_x (np.array): 왼쪽 차선 pixel x 값
+        # left_y (np.array): 왼쪽 차선 pixel y 값
+        # right_x (np.array): 오른쪽 차선 pixel x 값
+        # right_y (np.array): 오른쪽 차선 pixel y 값
+        # Returns:
+        # float: 차선 중앙으로부터 이탈정도를 확인합니다. (왼쪽 -, 오른쪽 +)
+
+        # 좌우 차선 별 2차함수 계수 추정합니다.
+        left_fit = np.polyfit(left_y, left_x, 2)
+        right_fit = np.polyfit(right_y, right_x, 2)
+
+        # Calculate vehicle center offset in pixels
+        bottom_y = sliding_window_img.shape[0] - 1
+        bottom_x_left = (
+            left_fit[0] * (bottom_y**2) + left_fit[1] * bottom_y + left_fit[2]
+        )
+        bottom_x_right = (
+            right_fit[0] * (bottom_y**2) + right_fit[1] * bottom_y + right_fit[2]
+        )
+        vehicle_offset = (
+            sliding_window_img.shape[1] / 2 - (bottom_x_left + bottom_x_right) / 2
+        )
+
+        # Convert pixel offset to meter
+        meter_per_pix_x, meter_per_pix_y = self.meter_per_pixel()
+        vehicle_offset *= meter_per_pix_x
+
+        return vehicle_offset
+
+    def cam_cal_steer(self, left_curve_radius, right_curve_radius, vehicle_offset):
+        curvature = 1 / ((left_curve_radius + right_curve_radius) / 2)
+        cam_steer = (atan((1 * curvature) / 1 - (1 / 2) * curvature)) * 100
+        if vehicle_offset > 0:
+            # cam_steer = -atan(curvature)
+            cam_steer = -cam_steer
+        else:
+            # cam_steer = atan(curvature)
+            cam_steer = cam_steer
+        return cam_steer
+
+    def erp42_ctrl_cmd(self):
+        self.ctrl_cmd_msg.longlCmdType = (
+            2  # 1 : Throttle  /  2 : Velocity  /  3 : Acceleration
+        )
+        self.ctrl_cmd_msg.accel = 0  # cmd_type이 1일때 원하는 엑셀을 넣어준다. (0~1)
+        self.ctrl_cmd_msg.brake = 0  # cmd_type이 1일때 원하는 브레이크값을 넣어준다. (0~1)
+        self.ctrl_cmd_msg.steering = 0  # cmd_type이 1일때 원하는 바퀴 각도를 넣어준다. (rad)
+        self.ctrl_cmd_msg.velocity = 8  # cmd_type이 2일때 원하는 속도를 넣어준다.(km/h)
+        self.ctrl_cmd_msg.acceleration = 0  # cmd_type이 3일때 원하는 가속도를 넣어준다. (m/s^2)
+        return self.ctrl_cmd_msg
+
     def img_CB(self, data):
+        self.end_time = rospy.get_time()
         img = self.bridge.compressed_imgmsg_to_cv2(data)
         self.nwindows = 10
         self.window_height = np.int(img.shape[0] / self.nwindows)
@@ -285,18 +386,41 @@ class Meter_Per_Pixel:
 
         meter_per_pix_x, meter_per_pix_y = self.meter_per_pixel()
 
-        os.system("clear")
-        print(f"------------------------------")
-        print(f"left : {left}")
-        print(f"right : {right}")
-        print(f"center : {center}")
-        print(f"left_x : {left_x}")
-        print(f"left_y : {left_y}")
-        print(f"right_x : {right_x}")
-        print(f"right_y : {right_y}")
-        print(f"meter_per_pix_x : {meter_per_pix_x}")
-        print(f"meter_per_pix_y : {meter_per_pix_y}")
-        print(f"------------------------------")
+        left_curve_radius, right_curve_radius = self.calc_curve(
+            left_x, left_y, right_x, right_y
+        )
+        vehicle_offset = self.calc_vehicle_offset(
+            sliding_window_img, left_x, left_y, right_x, right_y
+        )
+        cam_steer = self.cam_cal_steer(
+            left_curve_radius, right_curve_radius, vehicle_offset
+        )
+        ctrl_cmd_msg = self.erp42_ctrl_cmd()
+        if abs(vehicle_offset) > 1.35:
+            ctrl_cmd_msg.steering = cam_steer
+        else:
+            ctrl_cmd_msg.steering = 0
+        if self.end_time - self.start_time >= 0.1:
+            self.erp42_ctrl_pub.publish(ctrl_cmd_msg)
+
+            self.start_time = self.end_time
+        # os.system("clear")
+        # print(f"------------------------------")
+        # print(f"left : {left}")
+        # print(f"right : {right}")
+        # print(f"center : {center}")
+        # print(f"left_x : {left_x}")
+        # print(f"left_y : {left_y}")
+        # print(f"right_x : {right_x}")
+        # print(f"right_y : {right_y}")
+        # print(f"meter_per_pix_x : {meter_per_pix_x}")
+        # print(f"meter_per_pix_y : {meter_per_pix_y}")
+        # print(f"left_curve_radius : {left_curve_radius}")
+        # print(f"right_curve_radius : {right_curve_radius}")
+        # print(f"vehicle_offset : {vehicle_offset}")
+        # print(f"cam_steer : {cam_steer}")
+        # print(f"time : {self.start_time}")
+        # print(f"------------------------------")
         sliding_window_msg = self.bridge.cv2_to_compressed_imgmsg(sliding_window_img)
         self.pub.publish(sliding_window_msg)
         cv2.namedWindow("img", cv2.WINDOW_NORMAL)
@@ -307,5 +431,5 @@ class Meter_Per_Pixel:
 
 
 if __name__ == "__main__":
-    meter_per_pixel = Meter_Per_Pixel()
+    lkas = LKAS()
     rospy.spin()
