@@ -4,7 +4,7 @@ import rospy
 from morai_msgs.msg import EgoVehicleStatus
 import os
 
-
+# Define Camera class
 class Control:
     def __init__(self):
         rospy.init_node("ERP42_status_node")
