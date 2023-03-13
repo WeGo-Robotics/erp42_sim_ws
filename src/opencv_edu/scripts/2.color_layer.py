@@ -6,12 +6,14 @@ from cv_bridge import CvBridge
 import cv2
 import numpy as np
 
-
+# Define a class for creating a color image and publishing it
 class Color_Layer:
     def __init__(self):
+        # Initialize ROS node
         rospy.init_node("image_node", anonymous=False)
         # Create a publisher to publish the image
         self.image_pub = rospy.Publisher("color_img", Image, queue_size=10)
+        # Set the publishing rate to 10
         self.rate = rospy.Rate(10)
 
     def main(self):
@@ -41,10 +43,13 @@ class Color_Layer:
         self.ros_image = self.bridge.cv2_to_imgmsg(color, "bgr8")
         # Publish the ROS image message
         self.image_pub.publish(self.ros_image)
+        # Wait to match the specified publishing rate
         self.rate.sleep()
 
-
+        
+# Define the main function
 if __name__ == "__main__":
+    # Create an instance of the Color_Layer class
     color_layer = Color_Layer()
     try:
         while not rospy.is_shutdown():
