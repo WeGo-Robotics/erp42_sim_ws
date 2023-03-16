@@ -14,13 +14,15 @@ from math import cos,sin,sqrt,pow,atan2,pi
 
 class erp_planner():
     def __init__(self):
-        rospy.init_node('erp42_total', anonymous=True)
-
+        rospy.init_node("erp42_total", anonymous=True)
         arg = rospy.myargv(argv=sys.argv)
-        self.path_name=arg[1]
-        self.traffic_control=arg[2]
         
-
+        if len(arg) == 1:
+            self.path_name = "11"
+            self.traffic_control = True
+        else:
+            self.path_name = arg[1]
+            self.traffic_control = arg[2]
 
         #publisher
         global_path_pub= rospy.Publisher('/global_path',Path, queue_size=1)
