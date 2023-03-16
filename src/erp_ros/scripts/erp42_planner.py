@@ -18,7 +18,7 @@ class erp_planner():
         arg = rospy.myargv(argv=sys.argv)
         
         if len(arg) == 1:
-            self.path_name = "11"
+            self.path_name = "kcity"
             self.traffic_control = True
         else:
             self.path_name = arg[1]
