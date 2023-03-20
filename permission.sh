@@ -8,9 +8,13 @@ cd "$current_path"
 
 # Build work space
 catkin_make
+
+sudo find . -name "*.py" -type f -exec chmod 777 {} \;
+
 # Change permissions of all Python files in subdirectories
 SHELL_TYPE="$(basename "$SHELL")"
-
+echo "--------------------"  
+echo "Shell Type : $SHELL_TYPE"
 if [ "$SHELL_TYPE" == "bash" ]; then
   # Bash shell
   if ! grep -q "source $current_path/devel/setup.bash" ~/.zshrc; then
@@ -28,12 +32,6 @@ else
   exit 1
 fi
 
-sudo find . -name "*.py" -type f -exec chmod 777 {} \;
-
 # Setup Completed
-
-echo ""
-echo "--------------------"
 echo "Setup completed."
 echo "--------------------"
-echo ""
