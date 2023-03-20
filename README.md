@@ -19,7 +19,11 @@ sudo chmod 777 permission.sh
 
 ./permission.sh
 
-3.터미널에 다음과 같이 입력하여, ros master를 실행합니다.
+5. 터미널에 다음과 같이 출력되면 패스워드를 입력합니다.
+
+password for $USER:
+
+7.터미널에 다음과 같이 입력하여, ros master를 실행합니다.
 
 roscore
 
