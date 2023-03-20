@@ -20,12 +20,16 @@ if [ "$SHELL_TYPE" == "bash" ]; then
   if ! grep -q "source $current_path/devel/setup.bash" ~/.zshrc; then
     echo "source $current_path/devel/setup.bash" >> ~/.bashrc
     echo "Added 'source $current_path/devel/setup.bash' to ~/.bashrc"
+    else
+    echo "'source $current_path/devel/setup.bash' is already created in the bashrc file."
   fi
 elif [ "$SHELL_TYPE" == "zsh" ]; then
   # Zsh shell
 	if ! grep -q "source $current_path/devel/setup.zsh" ~/.zshrc; then
     echo "source $current_path/devel/setup.zsh" >> ~/.zshrc
     echo "Added 'source $current_path/devel/setup.zsh' to ~/.zshrc"
+    else
+    echo "'source $current_path/devel/setup.zsh' is already created in the zshrc file."
   fi
 else
   echo "Unsupported shell type: $SHELL_TYPE"
