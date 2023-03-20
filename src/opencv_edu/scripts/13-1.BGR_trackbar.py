@@ -8,7 +8,7 @@ from cv_bridge import CvBridge
 import numpy as np
 
 
-class HSV_trackbar:
+class BGR_trackbar:
     # Define the initialization function of the class
     def __init__(self):
         # Initialize ROS node
@@ -26,7 +26,7 @@ class HSV_trackbar:
         self.file_path += "/scripts/"
 
         # Set the file path for the image files
-        self.hsv_path = self.file_path + "HSV.png"
+        self.BGR_path = self.file_path + "HSV.png"
 
         # The name of the window for the trackbar GUI
         self.win_name = "color_detect_bgr"
@@ -44,7 +44,7 @@ class HSV_trackbar:
         #  Create a named window for the trackbar GUI
         cv2.namedWindow(self.win_name, cv2.WINDOW_NORMAL)
 
-        # Create trackbars for the HSV range
+        # Create trackbars for the BGR range
         cv2.createTrackbar("LB", self.win_name, 0, 255, self.bgr_track)
         cv2.createTrackbar("LG", self.win_name, 0, 255, self.bgr_track)
         cv2.createTrackbar("LR", self.win_name, 0, 255, self.bgr_track)
@@ -64,7 +64,7 @@ class HSV_trackbar:
     # Define the main function of the class
     def main(self):
         # Read the image in BGR format using OpenCV
-        color_img = cv2.imread(self.hsv_path, cv2.IMREAD_COLOR)
+        color_img = cv2.imread(self.BGR_path, cv2.IMREAD_COLOR)
 
         # Define the BGR range using the trackbar values
         lower = np.array([self.L_B_Value, self.L_G_Value, self.L_R_Value])
@@ -117,9 +117,9 @@ class HSV_trackbar:
 
 
 if __name__ == "__main__":
-    hsv_trackbar = HSV_trackbar()
+    bgr_trackbar = BGR_trackbar()
     try:
         while not rospy.is_shutdown():
-            hsv_trackbar.main()
+            bgr_trackbar.main()
     except rospy.ROSInterruptException:
         pass
