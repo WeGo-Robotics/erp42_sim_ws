@@ -11,7 +11,13 @@ cd erp42_sim_ws
 3. 터미널에 다음과 같이 입력하여, 원클릭 셋팅 파일의 모든 권한을 열어줍니다.
 sudo chmod 777 permission.sh
 
-4. 터미널에 다음과 같이 입력하여 원클릭 셋팅 파일을 실행합니다. 
+
+
+4. 터미널에 다음과 같이 입력하여 원클릭 셋팅 파일의 권한을 열어줍니다.
+
+sudo chmod 777 permission.sh
+
+5. 터미널에 다음과 같이 입력하여 원클릭 셋팅 파일을 실행합니다. 
 
 ./permission.sh
 
@@ -21,34 +27,34 @@ sudo chmod 777 permission.sh
 
 
 
-5. 터미널에 다음과 같이 출력되면 패스워드를 입력합니다.
+6. 터미널에 다음과 같이 출력되면 패스워드를 입력합니다.
 
 password for $USER:
 
-6.터미널에 다음과 같이 입력하여, ros master를 실행합니다.
+7.터미널에 다음과 같이 입력하여, ros master를 실행합니다.
 
 roscore
 
-7. roscore가 실행되었다면, 터미널에 다음과 같이 입력하여 파일을 실행해 봅니다.
+8. roscore가 실행되었다면, 터미널에 다음과 같이 입력하여 파일을 실행해 봅니다.
 
 ex)
 
 rosrun opencv_edu 1.grayscale.py
 
-8.rostopic list를 입력하여, 코드가 실행되어 있는지 확인합니다.
+9.rostopic list를 입력하여, 코드가 실행되어 있는지 확인합니다.
 
 rostopic list
 
 ![image](https://user-images.githubusercontent.com/113410253/224614156-faedebe0-9b34-435a-89e8-41a4ea2d56cd.png)
 
-9.rqt_graph를 입력하여, 노드의 이름과 토픽을 확인합니다.
+10.rqt_graph를 입력하여, 노드의 이름과 토픽을 확인합니다.
 
 rqt_graph
 
 ![image](https://user-images.githubusercontent.com/113410253/224614311-04562d68-b6d2-4a25-b3a3-179350ccbe5d.png)
 
 
-10. rqt_image_view를 실행하여, 결과를 확인합니다.
+11. rqt_image_view를 실행하여, 결과를 확인합니다.
 
 ![image](https://user-images.githubusercontent.com/113410253/224614482-9f10f471-dbf3-494b-a83f-1e4ced44baf4.png)
 
