@@ -62,5 +62,6 @@ if __name__ == "__main__":
     try:
         while not rospy.is_shutdown():
             color_and_gray.main()
+            cv2.waitKey(1)
     except rospy.ROSInterruptException:
         pass
