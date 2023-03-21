@@ -18,7 +18,7 @@ class BGR_trackbar:
         self.image_cvt_pub = rospy.Publisher("cvt_img", Image, queue_size=10)
 
         # Set the publishing rate to 10
-        self.rate = rospy.Rate(10)
+        # self.rate = rospy.Rate(10)
 
         # Get the file path of the "opencv_edu" package
         rospack = rospkg.RosPack()
