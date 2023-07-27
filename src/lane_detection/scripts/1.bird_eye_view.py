@@ -20,18 +20,18 @@ class Bird_Eye_View:
         self.img_x, self.img_y = img.shape[1], img.shape[0]
 
         # ROI
-        src_side_offset = [round(self.img_x * 0.046875), round(self.img_y * 0.208)]
-        src_center_offset = [round(self.img_x * 0.14), round(self.img_y * 0.083)]
+        src_side_offset = [x1, y1]
+        src_center_offset = [x2, y2]
         src = np.float32(
             [
                 [src_side_offset[0], self.img_y - src_side_offset[1]],
                 [
-                    self.img_x / 2 - src_center_offset[0],
-                    self.img_y / 2 + src_center_offset[1],
+                    src_center_offset[0],
+                    src_center_offset[1],
                 ],
                 [
-                    self.img_x / 2 + src_center_offset[0],
-                    self.img_y / 2 + src_center_offset[1],
+                    self.img_x - src_center_offset[0],
+                    src_center_offset[1],
                 ],
                 [
                     self.img_x - src_side_offset[0],
