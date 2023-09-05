@@ -29,7 +29,9 @@ sudo chmod 777 permission.sh
 
 6.터미널에 다음과 같이 입력하여, ros master를 실행합니다.
 
-```roscore```
+```
+roscore
+```
 
 7. roscore가 실행되었다면, 터미널에 다음과 같이 입력하여 파일을 실행해 봅니다.
 
@@ -39,7 +41,9 @@ ex)
 
 8.rostopic list를 입력하여, 코드가 실행되어 있는지 확인합니다.
 
-```rostopic list```
+```
+rostopic list
+```
 
 ![image](https://user-images.githubusercontent.com/113410253/224614156-faedebe0-9b34-435a-89e8-41a4ea2d56cd.png)
 
