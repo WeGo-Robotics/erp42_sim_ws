@@ -37,7 +37,9 @@ roscore
 
 ex)
 
-```rosrun opencv_edu 1.grayscale.py```
+```
+rosrun opencv_edu 1.grayscale.py
+```
 
 8.rostopic list를 입력하여, 코드가 실행되어 있는지 확인합니다.
 
